@@ -6,29 +6,28 @@
 #include <vector>
 #include <map>
 #include <cmath>
-using namespace std;
 
 const int MAX_RESULT_DOCUMENT_COUNT = 5;
-
+const double EPSILON = 1e-6;
 // Function to read a line from the input
-string ReadLine() {
-    string s;
-    getline(cin, s);
+std::string ReadLine() {
+    std::string s;
+    std::getline(std::cin, s);
     return s;
 }
 
 // Function to read a line from the input and return it as a number
 int ReadLineWithNumber() {
     int result = 0;
-    cin >> result;
+    std::cin >> result;
     ReadLine(); // Clear the input buffer
     return result;
 }
 
 // Function to split a string into words
-vector<string> SplitIntoWords(const string& text) {
-    vector<string> words;
-    string word;
+std::vector<std::string> SplitIntoWords(const std::string& text) {
+    std::vector<std::string> words;
+    std::string word;
     for (const char c : text) {
         if (c == ' ') {
             if (!word.empty()) {
@@ -63,15 +62,15 @@ enum class DocumentStatus {
 class SearchServer {
 public:
     // Set the stop words for the search server
-    void SetStopWords(const string& text) {
-        for (const string& word : SplitIntoWords(text)) {
+    void SetStopWords(const std::string& text) {
+        for (const std::string& word : SplitIntoWords(text)) {
             stop_words_.insert(word);
         }
     }
 
     // Add a document to the search server
-    void AddDocument(int document_id, const string& document, DocumentStatus status, const vector<int>& ratings) {    
-        const vector<string> words = SplitIntoWordsNoStop(document);
+    void AddDocument(int document_id, const std::string& document, DocumentStatus status, const std::vector<int>& ratings) {    
+        const std::vector<std::string> words = SplitIntoWordsNoStop(document);
         const double frequency = 1 * 1.0 / words.size();
         for (auto & word : words) {
            word_to_document_freqs[word][document_id] += frequency;
@@ -81,14 +80,17 @@ public:
     }
 
     // Find the top documents matching the query
-    vector<Document> FindTopDocuments(const string& raw_query, DocumentStatus status = DocumentStatus::ACTUAL) const {
+    std::vector<Document> FindTopDocuments(const std::string& raw_query, DocumentStatus status = DocumentStatus::ACTUAL) const {
         const Query query = ParseQuery(raw_query);
         auto matched_documents = FindAllDocuments(query, status);
 
-        sort(matched_documents.begin(), matched_documents.end(),
-             [](const Document& lhs, const Document& rhs) {
-                 return lhs.relevance > rhs.relevance;
-             });
+        std::sort(matched_documents.begin(), matched_documents.end(),
+             [](const Document& lhs, const Document& rhs){
+        if (std::abs(lhs.relevance - rhs.relevance) < EPSILON)  {
+            return lhs.rating > rhs.rating;
+        }
+            return lhs.relevance > rhs.relevance;
+    });
         if (matched_documents.size() > MAX_RESULT_DOCUMENT_COUNT) {
             matched_documents.resize(MAX_RESULT_DOCUMENT_COUNT);
         }
@@ -98,17 +100,17 @@ public:
         return document_status_.size();
     }
 
-    tuple<vector<string>, DocumentStatus> MatchDocument(const string& raw_query, int document_id) const {
+    std::tuple<std::vector<std::string>, DocumentStatus> MatchDocument(const std::string& raw_query, int document_id) const {
         const Query query = ParseQuery(raw_query);
-        vector<string> matched_words;
+        std::vector<std::string> matched_words;
         
-        for (const string& word : query.plus_words) {
+        for (const std::string& word : query.plus_words) {
             if (word_to_document_freqs.count(word) && word_to_document_freqs.at(word).count(document_id)) {
                 matched_words.push_back(word);
             }
         }
 
-        for (const string& word : query.minus_words) {
+        for (const std::string& word : query.minus_words) {
             if (word_to_document_freqs.count(word) && word_to_document_freqs.at(word).count(document_id)) {
                 matched_words.clear();
                 break;
@@ -123,32 +125,32 @@ public:
 private:
     // Struct to represent a query word
     struct QueryWord {
-        string data;
+        std::string data;
         bool is_minus;
         bool is_stop;
     };
 
     // Struct to represent a query
     struct Query {
-        set<string> plus_words;
-        set<string> minus_words;
+        std::set<std::string> plus_words;
+        std::set<std::string> minus_words;
     };
 
     // Map to store documents
-    map<string, map<int, double>> word_to_document_freqs;
-    set<string> stop_words_;
-    map<int, int> document_ratings_;
-    map<int, DocumentStatus> document_status_;
+    std::map<std::string, std::map<int, double>> word_to_document_freqs;
+    std::set<std::string> stop_words_;
+    std::map<int, int> document_ratings_;
+    std::map<int, DocumentStatus> document_status_;
 
     // Check if a word is a stop word
-    bool IsStopWord(const string& word) const {
+    bool IsStopWord(const std::string& word) const {
         return stop_words_.count(word) > 0;
     }
 
     // Split a string into words excluding stop words
-    vector<string> SplitIntoWordsNoStop(const string& text) const {
-        vector<string> words;
-        for (const string& word : SplitIntoWords(text)) {
+    std::vector<std::string> SplitIntoWordsNoStop(const std::string& text) const {
+        std::vector<std::string> words;
+        for (const std::string& word : SplitIntoWords(text)) {
             if (!IsStopWord(word)) {
                 words.push_back(word);
             }
@@ -157,7 +159,7 @@ private:
     }
 
     // Parse a query word
-    QueryWord ParseQueryWord(string text) const {
+    QueryWord ParseQueryWord(std::string text) const {
         bool is_minus = false;
         if (text[0] == '-') {
             is_minus = true;
@@ -167,9 +169,9 @@ private:
     }
 
     // Parse a query
-    Query ParseQuery(const string& text) const {
+    Query ParseQuery(const std::string& text) const {
         Query query;
-        for (const string& word : SplitIntoWords(text)) {
+        for (const std::string& word : SplitIntoWords(text)) {
             const QueryWord query_word = ParseQueryWord(word);
             if (!query_word.is_stop) {
                 if (query_word.is_minus) {
@@ -183,8 +185,8 @@ private:
     }
 
     // Find all documents matching the query
-    vector<Document> FindAllDocuments(const Query& query, DocumentStatus status) const {
-        map<int, double> doc_relevance;
+    std::vector<Document> FindAllDocuments(const Query& query, DocumentStatus status) const {
+        std::map<int, double> doc_relevance;
         for (const auto& word_plus: query.plus_words) {
             if (word_to_document_freqs.count(word_plus) > 0) {
                 const double idf = log(GetDocumentCount() * 1.0 / word_to_document_freqs.at(word_plus).size());
@@ -201,7 +203,7 @@ private:
             }
         }
         
-        vector<Document> matched_documents;
+        std::vector<Document> matched_documents;
         for (const auto& [id, relevance] : doc_relevance) {
             if (document_status_.at(id) == status) {
 
@@ -213,7 +215,7 @@ private:
     }
 
     // Compute the average rating of a document
-    static int ComputeAverageRating(const vector<int>& ratings) {
+    static int ComputeAverageRating(const std::vector<int>& ratings) {
         if (ratings.empty()) {
             return 0;
         }
@@ -223,6 +225,14 @@ private:
         }
         const int average_rating = sum_assesments / static_cast<int>(ratings.size());
         return average_rating;
+    }
+    bool CompareDocument(const Document& lhs, const Document& rhs) {
+        if (abs(lhs.relevance - rhs.relevance) < EPSILON)  {
+            return lhs.rating > rhs.rating;
+        }
+        else {
+            return lhs.relevance > rhs.relevance;
+        }
     }
 };
 
@@ -251,26 +261,25 @@ private:
     return search_server;
 */
 // ====================================ПРИМЕР===============================================
-void PrintMatchDocumentResult(int document_id, const vector<string>& words, DocumentStatus status) {
-    cout << "{ "s
-         << "document_id = "s << document_id << ", "s
-         << "status = "s << static_cast<int>(status) << ", "s
-         << "words ="s;
-    for (const string& word : words) {
-        cout << ' ' << word;
-    }
-    cout << "}"s << endl;
+void PrintDocument(const Document& document) {
+    using namespace std;
+    std::cout << "{ "s
+         << "document_id = "s << document.id << ", "s
+         << "relevance = "s << document.relevance << ", "s
+         << "rating = "s << document.rating
+         << " }"s << endl;
 }
+
 int main() {
+    using namespace std;
     SearchServer search_server;
     search_server.SetStopWords("и в на"s);
+
     search_server.AddDocument(0, "белый кот и модный ошейник"s,        DocumentStatus::ACTUAL, {8, -3});
     search_server.AddDocument(1, "пушистый кот пушистый хвост"s,       DocumentStatus::ACTUAL, {7, 2, 7});
     search_server.AddDocument(2, "ухоженный пёс выразительные глаза"s, DocumentStatus::ACTUAL, {5, -12, 2, 1});
-    search_server.AddDocument(3, "ухоженный скворец евгений"s,         DocumentStatus::BANNED, {9});
-    const int document_count = search_server.GetDocumentCount();
-    for (int document_id = 0; document_id < document_count; ++document_id) {
-        const auto [words, status] = search_server.MatchDocument("пушистый кот"s, document_id);
-        PrintMatchDocumentResult(document_id, words, status);
+
+    for (const Document& document : search_server.FindTopDocuments("ухоженный кот"s)) {
+        PrintDocument(document);
     }
 }
