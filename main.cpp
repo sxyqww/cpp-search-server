@@ -6,6 +6,7 @@
 #include <vector>
 #include <map>
 #include <cmath>
+#include <stdexcept>
 
 const int MAX_RESULT_DOCUMENT_COUNT = 5;
 const double EPSILON = 1e-6;
@@ -68,12 +69,6 @@ enum class DocumentStatus {
 // Class to represent the search server
 class SearchServer {
 public:
-    // Set the stop words for the search server
-    void SetStopWords(const std::string& text) {
-        for (const std::string& word : SplitIntoWords(text)) {
-            stop_words_.insert(word);
-        }
-    }
     SearchServer(const std::string& stop_word_text) {
         SetStopWords(stop_word_text);
     }
@@ -83,13 +78,37 @@ public:
     SearchServer(const Container& stop_word_container) {
         for (const auto& word : stop_word_container) {
             if (!word.empty()) {
+                if (!IsValidSymbol(word)) {
+                    throw std::invalid_argument("Stop words contain invalid characters (ASCII 0-31)");
+                }
                 stop_words_.insert(word);
             }
         }
     }
 
+    // Set the stop words for the search server
+
+    void SetStopWords(const std::string& text) {
+        for (const std::string& word : SplitIntoWords(text)) {
+            if (!IsValidSymbol(word)) {
+                throw std::invalid_argument("Stop words contain invalid characters (ASCII 0-31)");
+            }
+            stop_words_.insert(word);
+        }
+    }
+
     // Add a document to the search server
-    void AddDocument(int document_id, const std::string& document, DocumentStatus status, const std::vector<int>& ratings) {    
+    void AddDocument(int document_id, const std::string& document, DocumentStatus status, const std::vector<int>& ratings) {
+        if (document_id < 0) {
+            throw std::invalid_argument("Attempt to add a document with a negative ID!");
+        }
+        
+        if (document_ratings_.count(document_id) > 0)  {
+            throw std::invalid_argument("Attempt to add a document with the id of a previously added document!");
+        }
+        if (!IsValidSymbol(document)) {
+            throw std::invalid_argument("The presence of invalid characters (with codes from 0 to 31) in the text of the document being added");
+        }
         const std::vector<std::string> words = SplitIntoWordsNoStop(document);
         const double frequency = 1 * 1.0 / words.size();
         for (auto & word : words) {
@@ -97,6 +116,7 @@ public:
         }
         document_ratings_[document_id] = ComputeAverageRating(ratings);
         document_status_[document_id] = status;
+        document_ids_.push_back(document_id);
     }
     // Find the top documents matching the query
     template <typename Predicate>
@@ -155,7 +175,15 @@ public:
         matched_words.erase(unique(matched_words.begin(), matched_words.end()), matched_words.end());
 
         return {matched_words, document_status_.at(document_id)};
-    }       
+    }
+    
+    int GetDocumentId(const int& index) {
+        if (!(index >= 0 && index < static_cast<int>(document_ids_.size()))) {
+            throw std::out_of_range("The index of the transmitted document is out of the acceptable range!");
+        }
+
+        return document_ids_.at(index);
+    }
 private:
     // Struct to represent a query word
     struct QueryWord {
@@ -175,7 +203,17 @@ private:
     std::set<std::string> stop_words_;
     std::map<int, int> document_ratings_;
     std::map<int, DocumentStatus> document_status_;
+    std::vector<int> document_ids_;
 
+
+     bool IsValidSymbol(const std::string& text) const {
+        for (const char& symbol: text) {
+            if (symbol >= 0 && symbol <= 31) {
+                return false;
+            }
+        }
+        return true;
+    }
     // Check if a word is a stop word
     bool IsStopWord(const std::string& word) const {
         return stop_words_.count(word) > 0;
@@ -195,12 +233,20 @@ private:
     // Parse a query word
     QueryWord ParseQueryWord(std::string text) const {
         bool is_minus = false;
+        if (!IsValidSymbol(text)) {
+            throw std::invalid_argument("The presence of invalid characters (with codes from 0 to 31) in the text of the document being added");
+        }
         if (text[0] == '-') {
+            if (text[1] ==  '-') {
+                throw  std::invalid_argument("Наличие более чем одного минуса перед словами, которых не должно быть в искомых документах, например, пушистый --кот. В середине слов минусы разрешаются, например:  time-out.");
+            }
             is_minus = true;
             text = text.substr(1);
-        }
+            if (text.empty()) throw std::invalid_argument("Отсутствие текста после символа «минус» в поисковом запросе: пушистый -");
+            }
         return {text, is_minus, IsStopWord(text)};
-    }
+        }
+    
 
     // Parse a query
     Query ParseQuery(const std::string& text) const {
