@@ -33,8 +33,8 @@
       "args": [],
       "stopAtEntry": false,
       "externalConsole": true,
-      "cwd": "c:/Users/Alexandr/my_cpp_project",
-      "program": "c:/Users/Alexandr/my_cpp_project/build/Release/outRelease",
+      "cwd": "c:/my-cpp-project",
+      "program": "c:/my-cpp-project/build/Debug/outDebug",
       "MIMode": "gdb",
       "miDebuggerPath": "gdb",
       "setupCommands": [
