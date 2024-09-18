@@ -2,6 +2,7 @@
 #include "request_queue.h"
 #include "paginator.h"
 #include <iostream>
+#include "log_duration.h"
 int main() {
     using namespace std::literals;
     SearchServer search_server("and in at"s);
@@ -17,6 +18,7 @@ int main() {
     }
     // все еще 1439 запросов с нулевым результатом
     request_queue.AddFindRequest("curly dog"s);
+    
     // новые сутки, первый запрос удален, 1438 запросов с нулевым результатом
     request_queue.AddFindRequest("big collar"s);
     // первый запрос удален, 1437 запросов с нулевым результатом

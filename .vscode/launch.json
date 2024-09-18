@@ -32,9 +32,9 @@
       "request": "launch",
       "args": [],
       "stopAtEntry": false,
-      "externalConsole": true,
-      "cwd": "c:/my-cpp-project/search-server",
-      "program": "c:/my-cpp-project/search-server/build/Debug/outDebug",
+      "externalConsole": false,
+      "cwd": "/home/desire/my-cpp-project/search-server",
+      "program": "/home/desire/my-cpp-project/search-server/build/Debug/outDebug",
       "MIMode": "gdb",
       "miDebuggerPath": "gdb",
       "setupCommands": [
