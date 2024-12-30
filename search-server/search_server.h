@@ -8,6 +8,7 @@
 #include <cmath>
 #include <algorithm>
 #include <stdexcept>
+#include <numeric>
 const int MAX_RESULT_DOCUMENT_COUNT = 5;
 const double EPSILON = 1e-6;
 
@@ -32,8 +33,10 @@ public:
     int GetDocumentCount() const;
     
     std::tuple<std::vector<std::string>, DocumentStatus> MatchDocument(const std::string& raw_query, int document_id) const;
-    
-    int GetDocumentId(const int& index);
+    const std::map<std::string, double>& GetWordFrequencies(int document_id) const;
+    void RemoveDocument(int document_id);    
+    std::vector<int>::const_iterator begin();
+    std::vector<int>::const_iterator end();
 
 
 
@@ -65,8 +68,11 @@ private:
     std::vector<Document> FindAllDocuments(const Query& query, Predicate predicate) const;
 
     static int ComputeAverageRating(const std::vector<int>& ratings);
+
 };
 
+
+ 
 template <typename Container>
 SearchServer::SearchServer(const Container& stop_word_container) {
     for (const auto& word : stop_word_container) {

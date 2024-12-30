@@ -75,14 +75,6 @@ std::tuple<std::vector<std::string>, DocumentStatus> SearchServer::MatchDocument
     return {matched_words, document_status_.at(document_id)};
 }
 
-int SearchServer::GetDocumentId(const int& index) {
-    if (!(index >= 0 && index < static_cast<int>(document_ids_.size()))) {
-        throw std::out_of_range("The index of the transmitted document is out of the acceptable range!");
-    }
-
-    return document_ids_.at(index);
-}
-
 bool SearchServer::IsValidSymbol(const std::string& text) const {
     for (const char& symbol : text) {
         if (symbol >= 0 && symbol <= 31) {
@@ -141,10 +133,53 @@ int SearchServer::ComputeAverageRating(const std::vector<int>& ratings) {
     if (ratings.empty()) {
         return 0;
     }
-    int sum_assesments = 0;
-    for (const int& elem : ratings) {
-        sum_assesments += elem;
-    }
+    int sum_assesments = std::accumulate(ratings.begin(), ratings.end(), 0);
     const int average_rating = sum_assesments / static_cast<int>(ratings.size());
     return average_rating;
 }
+const std::map<std::string, double>& SearchServer::GetWordFrequencies(int document_id) const {
+    static const std::map<std::string, double> empty_map; // Пустая карта для возврата по умолчанию
+    if (document_ratings_.count(document_id) == 0) {
+        return empty_map;
+    }
+    static std::map<std::string, double> word_frequencies;
+    word_frequencies.clear();
+
+    for (const auto& [word, doc_freqs] : word_to_document_freqs) {
+        if (doc_freqs.count(document_id)) {
+            word_frequencies[word] = doc_freqs.at(document_id);
+        }
+    }
+
+    return word_frequencies;
+}
+
+void SearchServer::RemoveDocument(int document_id) {
+    if (document_ratings_.count(document_id) == 0) {
+        return;
+    }
+        // Удаляем частоты слов для документа
+    for (auto& [word, doc_freqs] : word_to_document_freqs) {
+        doc_freqs.erase(document_id); // Удаляем запись о документе для каждого слова
+        if (doc_freqs.empty()) {
+            word_to_document_freqs.erase(word); // Удаляем слово, если оно больше не связано с документами
+        }
+    }
+    document_ratings_.erase(document_id);
+    document_status_.erase(document_id);
+    auto it = std::find(document_ids_.begin(), document_ids_.end(), document_id);
+    if (it != document_ids_.end()) {
+        document_ids_.erase(it);
+    }
+}
+
+ 
+
+std::vector<int>::const_iterator SearchServer::begin() {
+    return document_ids_.begin();
+}
+
+std::vector<int>::const_iterator SearchServer::end() {
+    return document_ids_.end();
+}
+
