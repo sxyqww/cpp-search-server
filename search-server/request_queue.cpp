@@ -4,7 +4,7 @@
 RequestQueue::RequestQueue(const SearchServer& search_server) : search_server_(search_server) {
 }
 
-RequestQueue::QueryResult::QueryResult(int timestamp, int result_count) 
+RequestQueue::QueryResult::QueryResult(uint64_t timestamp, int result_count) 
     : timestamp_(timestamp), result_count_(result_count) {
 }
 

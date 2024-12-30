@@ -1,10 +1,10 @@
 #pragma once
-#include "search_server.h"
+
 #include <deque>
 #include <vector>
 #include <algorithm>
-
-
+#include <cstdint>
+#include "search_server.h"
 class RequestQueue {
 public:
     explicit RequestQueue(const SearchServer& search_server);
@@ -19,17 +19,17 @@ public:
 
 private:
     struct QueryResult {
-        int timestamp_;
+        uint64_t timestamp_;
         int result_count_;
 
-        QueryResult(int timestamp, int result_count);
+        QueryResult(uint64_t timestamp, int result_count);
     };
 
     std::deque<QueryResult> requests_;
     const static int min_in_day_ = 1440;
     const SearchServer& search_server_;
     int no_result_requests_ = 0;
-    int current_time_ = 0;
+    uint64_t current_time_ = 0;
 
     void AddResult(int result_count);
 };

@@ -18,7 +18,16 @@ public:
     SearchServer(const std::string& stop_word_text);
     
     template <typename Container>
-    SearchServer(const Container& stop_word_container);
+    SearchServer(const Container& stop_word_container) {
+    for (const auto& word : stop_word_container) {
+        if (!word.empty()) {
+            if (!IsValidSymbol(word)) {
+                throw std::invalid_argument("Stop words contain invalid characters (ASCII 0-31)");
+            }
+            stop_words_.insert(word);
+        }
+    }
+}
 
     void SetStopWords(const std::string& text);
     
@@ -71,19 +80,6 @@ private:
 
 };
 
-
- 
-template <typename Container>
-SearchServer::SearchServer(const Container& stop_word_container) {
-    for (const auto& word : stop_word_container) {
-        if (!word.empty()) {
-            if (!IsValidSymbol(word)) {
-                throw std::invalid_argument("Stop words contain invalid characters (ASCII 0-31)");
-            }
-            stop_words_.insert(word);
-        }
-    }
-}
 
 template <typename Predicate>
 std::vector<Document> SearchServer::FindTopDocuments(const std::string& raw_query, Predicate predicate) const {
