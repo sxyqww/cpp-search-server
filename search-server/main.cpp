@@ -1,7 +1,7 @@
+#include <iostream>
 #include "search_server.h"
 #include "request_queue.h"
 #include "paginator.h"
-#include <iostream>
 #include "log_duration.h"
 int main() {
     using namespace std::literals;

@@ -1,6 +1,9 @@
 #pragma once
 #include "search_server.h"
 #include <deque>
+#include <vector>
+#include <algorithm>
+
 
 class RequestQueue {
 public:
@@ -16,8 +19,8 @@ public:
 
 private:
     struct QueryResult {
-        int timestamp;
-        int result_count;
+        int timestamp_;
+        int result_count_;
 
         QueryResult(int timestamp, int result_count);
     };
@@ -30,6 +33,13 @@ private:
 
     void AddResult(int result_count);
 };
+
+template <typename DocumentPredicate>
+std::vector<Document> RequestQueue::AddFindRequest(const std::string& raw_query, DocumentPredicate document_predicate) {
+    auto result = search_server_.FindTopDocuments(raw_query, document_predicate);
+    AddResult(result.size());
+    return result;
+}
 
 
 
