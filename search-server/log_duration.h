@@ -15,9 +15,10 @@ public:
     // с помощью using для удобства
     using Clock = std::chrono::steady_clock;
 
-    LogDuration(const std::string& id, std::ostream& dst_stream = std::cerr)
+    LogDuration(const std::string_view& id, std::ostream& dst_stream = std::cerr)
         : id_(id)
         , dst_stream_(dst_stream) {
+            dst_stream_ << id_ << "exist" << endl;
     }
 
     ~LogDuration() {
@@ -30,7 +31,7 @@ public:
     }
 
 private:
-    const std::string id_;
+    const std::string_view id_;
     const Clock::time_point start_time_ = Clock::now();
     std::ostream& dst_stream_;
 };

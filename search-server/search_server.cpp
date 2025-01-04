@@ -137,6 +137,7 @@ int SearchServer::ComputeAverageRating(const std::vector<int>& ratings) {
     const int average_rating = sum_assesments / static_cast<int>(ratings.size());
     return average_rating;
 }
+
 const std::map<std::string, double>& SearchServer::GetWordFrequencies(int document_id) const {
     static const std::map<std::string, double> empty_map; // Пустая карта для возврата по умолчанию
     if (document_ratings_.count(document_id) == 0) {
@@ -155,6 +156,10 @@ const std::map<std::string, double>& SearchServer::GetWordFrequencies(int docume
 }
 
 void SearchServer::RemoveDocument(int document_id) {
+    return RemoveDocument(std::execution::seq, document_id);
+}
+
+void SearchServer::RemoveDocument(std::execution::sequenced_policy policy,int document_id) {
     if (document_ratings_.count(document_id) == 0) {
         return;
     }
@@ -173,7 +178,34 @@ void SearchServer::RemoveDocument(int document_id) {
     }
 }
 
- 
+void SearchServer::RemoveDocument(std::execution::parallel_policy policy, int document_id) {
+    if (document_ratings_.count(document_id) == 0) {
+        return;
+    }
+
+    std::vector<std::string> words;
+    for (const auto& [word, _]: word_to_document_freqs) {
+        words.push_back(word);
+    }
+
+    std::for_each(policy, words.begin(), words.end(), 
+        [this, document_id](const std::string& word) {
+            auto it = word_to_document_freqs.find(word);
+            if (it != word_to_document_freqs.end()) {
+                it->second.erase(document_id);
+                if (it->second.empty()) {
+                    word_to_document_freqs.erase(it);
+                }
+            }
+        });
+        
+    document_ratings_.erase(document_id);
+    document_status_.erase(document_id);
+    auto it = std::find(document_ids_.begin(), document_ids_.end(), document_id);
+    if (it != document_ids_.end()) {
+        document_ids_.erase(it);
+    }
+}
 
 std::vector<int>::const_iterator SearchServer::begin() {
     return document_ids_.begin();
