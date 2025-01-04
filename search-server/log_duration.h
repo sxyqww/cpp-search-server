@@ -18,7 +18,6 @@ public:
     LogDuration(const std::string_view& id, std::ostream& dst_stream = std::cerr)
         : id_(id)
         , dst_stream_(dst_stream) {
-            dst_stream_ << id_ << "exist" << endl;
     }
 
     ~LogDuration() {

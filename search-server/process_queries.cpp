@@ -21,7 +21,8 @@ std::list<Document> ProcessQueriesJoined(
         vector<vector<Document>> partial_result = ProcessQueries(search_server, queries);
         std::list<Document> joined_result;
         for (const auto& vec_doc: partial_result) {
-            joined_result.insert(joined_result.end(), vec_doc.begin(), vec_doc.end());
+            joined_result.insert(joined_result.end(), std::make_move_iterator(vec_doc.begin()),
+            std::make_move_iterator(vec_doc.end()));
         }
 
         return joined_result;

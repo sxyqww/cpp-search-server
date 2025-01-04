@@ -55,7 +55,15 @@
     "variant": "cpp",
     "chrono": "cpp",
     "ratio": "cpp",
-    "list": "cpp"
+    "list": "cpp",
+    "cstring": "cpp",
+    "condition_variable": "cpp",
+    "mutex": "cpp",
+    "semaphore": "cpp",
+    "shared_mutex": "cpp",
+    "stop_token": "cpp",
+    "thread": "cpp",
+    "cfenv": "cpp"
   },
   "C_Cpp_Runner.cCompilerPath": "gcc",
   "C_Cpp_Runner.cppCompilerPath": "g++",
