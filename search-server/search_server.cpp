@@ -201,7 +201,7 @@ void SearchServer::RemoveDocument(std::execution::parallel_policy policy, int do
         
     document_ratings_.erase(document_id);
     document_status_.erase(document_id);
-    auto it = std::find(document_ids_.begin(), document_ids_.end(), document_id);
+    auto it = std::find(policy, document_ids_.begin(), document_ids_.end(), document_id);
     if (it != document_ids_.end()) {
         document_ids_.erase(it);
     }
